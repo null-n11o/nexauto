@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { postMediaFields } from '@/lib/post-media-fields'
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient()
@@ -8,7 +9,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   const { id } = await params
   const body = await request.json()
-  const updates: Record<string, unknown> = {}
+  let updates: Record<string, unknown>
+  try { updates = postMediaFields(body) } catch { return NextResponse.json({ error:'invalid_media_fields' },{ status:400 }) }
 
   if (body.status !== undefined) updates.status = body.status
   if (body.content !== undefined) updates.content = body.content

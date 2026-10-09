@@ -1,6 +1,6 @@
 # Instagram and Threads publishing through NexAuto
 
-Status: proposed for CEO review. No application code or production settings changed.
+Status: CEO-approved on 2026-10-09. Implementation prepared in a separate branch; production rollout remains pending.
 Request: CEO, 2026-10-09. Publish Instagram and Threads through NexAuto after an explicit instruction.
 Development task: [N11-286](https://linear.app/n11o/issue/N11-286/nexauto-publish-instagram-reels-and-threads-videos-after-explicit).
 
@@ -10,7 +10,7 @@ Upload a video once in NexAuto, select Instagram, Threads, or both, and review a
 
 Draft creation, editing, asset upload, and changing a draft to `ready` do not authorize publication. Explicit approval is required for both Dober's Instagram and Threads accounts. Existing `ready` posts never acquire approval through migration. Existing X accounts retain their current behavior during this migration.
 
-## Current implementation
+## Inspected baseline
 
 The inspected baseline is `origin/main` at `747eeac`.
 
@@ -43,11 +43,11 @@ Carousels, Stories, automatic caption generation, Instagram analytics, and autom
 
 ## Media storage
 
-Use the existing Supabase project first. Add a private `post-media` bucket. Store objects under a company-scoped, immutable path such as `<company-id>/<asset-id>/video.mp4`. Uploading a replacement creates a new asset ID. Do not overwrite an object already used by an approved post.
+Use the existing Supabase project first. Add a private `post-media` bucket. Store objects under a company-scoped, immutable path such as `<company-id>/<asset-id>/video.mp4`. Uploading a replacement creates a new asset ID. Do not overwrite an object already used by an approved post. The new approval flow rejects external image URLs; upload a verified JPEG asset first. Legacy posting paths retain their existing image URL behavior.
 
 Use signed resumable uploads so video bytes go directly to Storage. Do not send large video bodies through a Next.js route. Supabase recommends resumable uploads for files above 6 MB. An authenticated server checks the user's company, creates the intended object path, and issues the upload capability. MCP uploads use the same asset contract through a scoped local client.
 
-After upload, the server verifies object existence, size, media type, and checksum. Only verified assets can be selected for publication. Apply video-format validation against each selected platform's current API limits. Client metadata alone cannot establish eligibility.
+After upload, the server verifies object existence, size, media type, and checksum. Only verified assets can be selected for publication. The first implementation uses a conservative common MP4 subset: 3 seconds to 5 minutes, H.264 or HEVC, 23–60 fps, at most 1920 pixels in either dimension, and optional AAC audio. Client metadata alone cannot establish eligibility.
 
 Generate a fresh signed download URL when an approved job starts. Use a bounded expiry that covers media processing and reuse that URL for the current container. Do not store an expiring URL as the draft's permanent attachment. A signed URL allows its holder to fetch the file until expiry; redact it from logs and MCP output. Meta's ability to fetch this URL must pass a live container-creation check before rollout.
 

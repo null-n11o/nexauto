@@ -16,6 +16,7 @@ import {
   saveMarkdownReport,
 } from './store.js'
 import { syncThreadsPosts } from './threads-import.js'
+import { publishingTools,callPublishingTool,mcpPublishingContext,assertAccountScope } from './publishing/mcp.ts'
 
 const supabaseUrl = process.env.SUPABASE_URL
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -34,6 +35,7 @@ const server = new Server(
 
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
+    ...publishingTools,
     {
       name: 'list_accounts',
       description: '利用可能なSNSアカウントの一覧を返す',
@@ -48,6 +50,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           account_id: { type: 'string', description: 'アカウントID' },
           content: { type: 'string', description: '投稿本文' },
           image_url: { type: 'string', description: '画像URL（省略可）' },
+          asset_id: { type:'string' },
+          cover_asset_id: { type:'string' },
+          execution_at: { type:['string','null'] },
+          share_to_feed: { type:'boolean' },
+          is_ai_generated: { type:'boolean' },
           scheduled_date: { type: 'string', description: '投稿予定日 (YYYY-MM-DD)' },
         },
         required: ['account_id', 'content', 'scheduled_date'],
@@ -77,6 +84,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           id: { type: 'string' },
           content: { type: 'string' },
           image_url: { type: 'string' },
+          asset_id: { type:['string','null'] },
+          cover_asset_id: { type:['string','null'] },
+          execution_at: { type:['string','null'] },
+          share_to_feed: { type:'boolean' },
+          is_ai_generated: { type:'boolean' },
           scheduled_date: { type: 'string' },
           status: { type: 'string', enum: ['draft', 'review', 'ready'] },
         },
@@ -183,11 +195,22 @@ function normalizeImageUrl(value: unknown) {
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params
+  const ctx = await mcpPublishingContext(supabase)
+  if (publishingTools.some(tool=>tool.name===name)) {
+    try { return jsonResult(await callPublishingTool(supabase,ctx,name,args ?? {})) }
+    catch (error) { return { isError:true,content:[{ type:'text' as const,text:error instanceof Error && /^[a-z_]+$/.test(error.message) ? error.message : 'publishing_tool_failed' }] } }
+  }
+  if (args?.account_id !== undefined) await assertAccountScope(supabase,ctx,args.account_id)
+  if (name === 'update_post') {
+    const { data:post } = await supabase.from('posts').select('account_id').eq('id',args?.id).single()
+    await assertAccountScope(supabase,ctx,post?.account_id)
+  }
 
   if (name === 'list_accounts') {
     const { data, error } = await supabase
       .from('accounts')
       .select('id, account_name, platform')
+      .eq('company_id',ctx.companyId)
       .order('created_at')
     if (error) throw new Error(error.message)
     return jsonResult(data)
@@ -206,6 +229,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         scheduled_date,
         status: 'draft',
         source: 'ai',
+        asset_id:args?.asset_id ?? null,
+        cover_asset_id:args?.cover_asset_id ?? null,
+        execution_at:args?.execution_at ?? null,
+        share_to_feed:args?.share_to_feed ?? true,
+        is_ai_generated:args?.is_ai_generated ?? false,
       })
       .select()
       .single()
@@ -217,7 +245,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { account_id, status } = args as { account_id: string; status?: string }
     let query = supabase
       .from('posts')
-      .select('id, content, image_url, scheduled_date, status, source, platform_post_id, published_at, created_at')
+      .select('id, content, image_url, asset_id, cover_asset_id, execution_at, revision, share_to_feed, is_ai_generated, scheduled_date, status, source, platform_post_id, published_at, created_at')
       .eq('account_id', account_id)
       // Fetch newest posts first so response/display limits retain recent posts.
       .order('scheduled_date', { ascending: false })
@@ -231,6 +259,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { id, ...updates } = args as {
       id: string; content?: string; image_url?: string; scheduled_date?: string; status?: string
     }
+    if (Object.keys(updates).some(key=>!['content','image_url','scheduled_date','status','asset_id','cover_asset_id','execution_at','share_to_feed','is_ai_generated'].includes(key))) throw new Error('invalid_post_update')
     if (updates.status === 'published' || updates.status === 'failed') {
       throw new Error('MCP から published / failed にはできない。公開実行はCEOが行う')
     }

@@ -1,5 +1,5 @@
 export type UserRole = 'admin' | 'operator'
-export type Platform = 'x' | 'threads'
+export type Platform = 'x' | 'threads' | 'instagram'
 export type PostStatus = 'draft' | 'review' | 'ready' | 'published' | 'failed'
 export type PostSource = 'ai' | 'manual'
 
@@ -52,6 +52,12 @@ export interface Post {
   published_at: string | null
   platform_post_id: string | null
   created_at: string
+  asset_id?: string | null
+  cover_asset_id?: string | null
+  execution_at?: string | null
+  share_to_feed?: boolean
+  is_ai_generated?: boolean
+  revision?: number
 }
 
 export interface PromptConfigHistory {

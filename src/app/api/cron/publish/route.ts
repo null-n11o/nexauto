@@ -4,7 +4,7 @@ import { publishAndLog } from '@/lib/publish-log'
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
   }
 
   const results = await Promise.allSettled(
-    posts.map(async post => {
+    posts.filter(post => post.accounts.platform !== 'instagram' && post.accounts.publishing_policy !== 'explicit').map(async post => {
       const account = post.accounts as Record<string, string | null>
       const { platformPostId, error } = await publishAndLog(supabase, {
         post: { id: post.id, account_id: post.account_id, content: post.content, image_url: post.image_url ?? null },
