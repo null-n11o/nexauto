@@ -116,7 +116,7 @@ DECLARE snap jsonb;
 BEGIN
   IF NOT EXISTS(SELECT 1 FROM posts p JOIN accounts a ON a.id=p.account_id WHERE p.id=p_id AND a.company_id=p_company) THEN RAISE EXCEPTION 'not_found'; END IF;
   snap := publishing_snapshot(p_id);
-  RETURN jsonb_build_object('snapshot',snap,'digest',encode(digest(snap::text,'sha256'),'hex'));
+  RETURN jsonb_build_object('snapshot',snap,'digest',encode(sha256(convert_to(snap::text,'UTF8')),'hex'));
 END $$;
 
 CREATE FUNCTION approve_publication(p_id uuid,p_company uuid,p_actor uuid,p_digest text,p_instruction text,p_source text) RETURNS publish_jobs

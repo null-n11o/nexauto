@@ -45,10 +45,11 @@ with tempfile.TemporaryDirectory(prefix='nexauto-pg-') as temporary:
     try:
         sql("""
         CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role BYPASSRLS;
+        CREATE SCHEMA extensions; CREATE EXTENSION pgcrypto WITH SCHEMA extensions;
         CREATE SCHEMA auth; CREATE TABLE auth.users(id uuid PRIMARY KEY);
         CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS 'SELECT (nullif(current_setting(''request.jwt.claims'',true),'''')::jsonb->>''sub'')::uuid';
         CREATE SCHEMA storage; CREATE TABLE storage.buckets(id text PRIMARY KEY,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
-        GRANT USAGE ON SCHEMA public,auth,storage TO authenticated,service_role,anon;
+        GRANT USAGE ON SCHEMA public,auth,storage,extensions TO authenticated,service_role,anon;
         ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO authenticated,service_role;
         """)
         for migration in sorted((ROOT/'supabase/migrations').glob('*.sql')):
@@ -63,6 +64,7 @@ with tempfile.TemporaryDirectory(prefix='nexauto-pg-') as temporary:
         preview = f"publishing_preview('{POST}','{COMPANY}')"
         approval = f"approve_publication('{POST}','{COMPANY}','{ACTOR}',({preview})->>'digest','CEO fixture approval','mcp')"
         assert service('SELECT count(*) FROM publish_jobs;')=='0'
+        assert service(f"SELECT ({preview})->>'digest'=encode(extensions.digest((({preview})->'snapshot')::text,'sha256'),'hex');")=='t'
         service(f"UPDATE posts SET image_url='https://example.test/mutable.jpg' WHERE id='{POST}';")
         rejected(f'SELECT {preview};','external_media_requires_upload')
         service(f"UPDATE posts SET image_url=NULL WHERE id='{POST}';")
