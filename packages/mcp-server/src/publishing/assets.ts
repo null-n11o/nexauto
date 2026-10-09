@@ -47,7 +47,7 @@ export async function beginUpload(
     .createSignedUploadUrl(path, { upsert: false })
   if (signError || !data) throw new Error('upload_unavailable')
   const origin = new URL(data.signedUrl).origin
-  const endpoint = `${origin}/storage/v1/upload/resumable`
+  const endpoint = `${origin}/storage/v1/upload/resumable/sign`
   return {
     id,
     path,

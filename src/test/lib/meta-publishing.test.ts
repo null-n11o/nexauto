@@ -343,6 +343,9 @@ describe('asset validation', () => {
       id: result.id,
     })
     expect(result.path).toMatch(/^company\//)
+    expect(result.endpoint).toBe(
+      'https://storage.example.test/storage/v1/upload/resumable/sign',
+    )
   })
   it('rejects oversized covers and invalid checksums', () => {
     expect(() =>
