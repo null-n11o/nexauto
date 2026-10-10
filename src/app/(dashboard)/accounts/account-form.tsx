@@ -14,34 +14,10 @@ import {
 import { createAccount } from './actions'
 
 export function AccountForm() {
-  const [platform, setPlatform] = useState<'x' | 'threads'>('x')
+  const [platform, setPlatform] = useState<'x' | 'threads' | 'instagram'>('x')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
-  const [threadsUser, setThreadsUser] = useState<{ id: string; username: string } | null>(null)
-  const [fetchingThreadsUser, setFetchingThreadsUser] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
-
-  async function handleAccessTokenBlur(e: React.FocusEvent<HTMLInputElement>) {
-    const token = e.target.value.trim()
-    if (!token) return
-    setFetchingThreadsUser(true)
-    setThreadsUser(null)
-    try {
-      const res = await fetch(
-        `https://graph.threads.net/v1.0/me?fields=id,username&access_token=${encodeURIComponent(token)}`
-      )
-      const data = await res.json()
-      if (data.id) {
-        setThreadsUser({ id: data.id, username: data.username })
-      } else {
-        setMessage('エラー: アクセストークンからユーザー情報を取得できませんでした')
-      }
-    } catch {
-      setMessage('エラー: Threads APIへの接続に失敗しました')
-    } finally {
-      setFetchingThreadsUser(false)
-    }
-  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -65,13 +41,14 @@ export function AccountForm() {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <Label>プラットフォーム</Label>
-          <Select value={platform} onValueChange={v => { if (v) { setPlatform(v as 'x' | 'threads'); setThreadsUser(null) } }}>
+          <Select value={platform} onValueChange={v => { if (v) setPlatform(v as 'x' | 'threads' | 'instagram') }}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="x">X (Twitter)</SelectItem>
               <SelectItem value="threads">Threads</SelectItem>
+              <SelectItem value="instagram">Instagram</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -120,17 +97,11 @@ export function AccountForm() {
               <Input
                 id="access-token"
                 name="access_token"
-                onBlur={handleAccessTokenBlur}
+                type="password"
               />
-              {fetchingThreadsUser && (
-                <p className="text-xs text-gray-500 mt-1">ユーザー情報を取得中...</p>
-              )}
-              {threadsUser && (
-                <>
-                  <p className="text-xs text-green-600 mt-1">@{threadsUser.username} として認識しました</p>
-                  <input type="hidden" name="platform_user_id" value={threadsUser.id} />
-                </>
-              )}
+              <Label htmlFor="platform-user-id">User ID</Label>
+              <Input id="platform-user-id" name="platform_user_id" required />
+              <p className="text-xs text-gray-500 mt-1">登録時にアカウントと投稿権限を確認します。</p>
             </div>
           )}
         </div>

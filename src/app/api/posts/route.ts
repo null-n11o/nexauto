@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { postMediaFields } from '@/lib/post-media-fields'
 import { withLatestMetrics } from '@/lib/analytics/latest-metrics'
 import type { Post, PostMetrics } from '@/types'
 
@@ -32,6 +33,8 @@ export async function POST(request: Request) {
 
   const body = await request.json()
   const { account_id, content, scheduled_date, source = 'manual', image_url } = body
+  let media: Record<string,unknown>
+  try { media = postMediaFields(body) } catch { return NextResponse.json({ error:'invalid_media_fields' },{ status:400 }) }
 
   const { data, error } = await supabase.from('posts').insert({
     account_id,
@@ -40,6 +43,7 @@ export async function POST(request: Request) {
     scheduled_date,
     source,
     status: 'draft',
+    ...media,
   }).select().single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })

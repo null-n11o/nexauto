@@ -19,6 +19,7 @@ interface Account {
 const PLATFORM_LABELS: Record<string, string> = {
   x: 'X',
   threads: 'Threads',
+  instagram: 'Instagram',
 }
 
 const platformLabel = (platform: string) => PLATFORM_LABELS[platform] ?? platform

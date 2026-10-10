@@ -36,6 +36,7 @@ function resolveTiers(config: AutoReplyConfig): AutoReplyTier[] {
 
 interface AccountShape {
   platform: string
+  publishing_policy?: string
   access_token: string | null
   platform_user_id: string | null
   auto_reply_config: AutoReplyConfig | null
@@ -97,7 +98,7 @@ export async function GET(request: Request) {
     // Continue until an empty page, even when the database caps results below our limit.
     while (true) {
       let query = supabase.from('posts')
-        .select('id, platform_post_id, published_at, cta_reply_posted, cta_reply_claimed_at, accounts(platform, access_token, platform_user_id, auto_reply_config)')
+        .select('id, platform_post_id, published_at, cta_reply_posted, cta_reply_claimed_at, accounts(platform, publishing_policy, access_token, platform_user_id, auto_reply_config)')
         .eq('status', 'published')
         .eq('cta_reply_posted', false)
         .not('platform_post_id', 'is', null)
@@ -127,7 +128,7 @@ export async function GET(request: Request) {
             const raw = post.accounts as unknown
             const account = (Array.isArray(raw) ? raw[0] : raw) as AccountShape | undefined
             const config = account?.auto_reply_config
-            if (!account || account.platform !== 'threads' || !config?.enabled) return
+            if (!account || account.platform !== 'threads' || account.publishing_policy === 'explicit' || !config?.enabled) return
             const tiers = resolveTiers(config)
             if (!tiers.every(t => Number.isFinite(t.window_minutes) && t.window_minutes > 0 && Number.isFinite(t.threshold) && t.threshold > 0)) {
               report({ postId: post.id, stage }); return

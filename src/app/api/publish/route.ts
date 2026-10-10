@@ -18,6 +18,9 @@ export async function POST(request: Request) {
   if (!post) return NextResponse.json({ error: 'Post not found' }, { status: 404 })
 
   const account = post.accounts as Record<string, string | null>
+  if (account.platform === 'instagram' || account.publishing_policy === 'explicit') {
+    return NextResponse.json({ error:'Review and approve this post in /publishing before publication' },{ status:409 })
+  }
 
   const { platformPostId, error } = await publishAndLog(supabase, {
     post: { id: post.id, account_id: post.account_id, content: post.content, image_url: post.image_url ?? null },

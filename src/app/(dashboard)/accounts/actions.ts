@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { encrypt } from '@/lib/crypto'
+import { MetaProvider, type MetaPlatform } from '../../../../packages/mcp-server/src/publishing/provider'
 
 async function getAdminProfile() {
   const supabase = await createClient()
@@ -37,8 +38,8 @@ export async function createAccount(formData: FormData) {
   const platformUserId = (formData.get('platform_user_id') as string | null)?.trim() || null
 
   if (!platform || !accountName) return { error: 'プラットフォームとアカウント名は必須です' }
-  if (platform !== 'x' && platform !== 'threads') return { error: '無効なプラットフォームです' }
-  if (platform === 'threads' && !platformUserId) return { error: 'ThreadsはUser IDが必須です' }
+  if (!['x','threads','instagram'].includes(platform)) return { error: '無効なプラットフォームです' }
+  if (platform !== 'x' && !platformUserId) return { error: 'User IDは必須です' }
 
   const postingTimes = postingTimesRaw
     .split(',')
@@ -47,6 +48,11 @@ export async function createAccount(formData: FormData) {
 
   const profile = await getAdminProfile()
   if (!profile) return { error: '管理者権限が必要です' }
+
+  if (platform !== 'x' && accessToken?.trim()) {
+    try { await new MetaProvider(platform as MetaPlatform,accessToken!,platformUserId!).checkIdentity() }
+    catch { return { error:'アカウントと投稿権限を確認できませんでした' } }
+  }
 
   const service = await createServiceClient()
   const { error } = await service.from('accounts').insert({
@@ -59,6 +65,8 @@ export async function createAccount(formData: FormData) {
     access_token: encryptIfPresent(accessToken),
     access_token_secret: encryptIfPresent(accessTokenSecret),
     platform_user_id: platformUserId,
+    publishing_policy: platform === 'x' ? 'legacy' : 'explicit',
+    connection_status: platform !== 'x' && accessToken?.trim() ? 'connected' : 'unchecked',
   })
 
   if (error) return { error: error.message }

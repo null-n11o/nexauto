@@ -13,6 +13,7 @@ interface SidebarProps {
 
 const navItems = [
   { href: '/posts', label: '投稿管理' },
+  { href: '/publishing', label: 'Instagram・Threads投稿' },
   { href: '/accounts', label: 'アカウント' },
   { href: '/analytics', label: '分析' },
 ]

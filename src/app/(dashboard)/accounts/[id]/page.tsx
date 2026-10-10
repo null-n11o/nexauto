@@ -3,7 +3,7 @@ import { redirect, notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { AutoReplyForm } from './auto-reply-form'
 import { AccountNameForm } from './account-name-form'
-import { ThreadsTokenForm } from './threads-token-form'
+import { MetaTokenForm } from './meta-token-form'
 
 export default async function AccountSettingsPage({
   params,
@@ -27,7 +27,7 @@ export default async function AccountSettingsPage({
 
   const { data: account } = await supabase
     .from('accounts')
-    .select('id, platform, account_name, posting_times, auto_reply_config, access_token, company_id')
+    .select('id, platform, account_name, posting_times, auto_reply_config, company_id, publishing_policy, connection_status, token_expires_at')
     .eq('id', id)
     .single()
 
@@ -51,7 +51,7 @@ export default async function AccountSettingsPage({
         <div className="border-t pt-4 text-sm space-y-1">
           <p>
             <span className="text-gray-500">プラットフォーム: </span>
-            {account.platform === 'x' ? 'X' : 'Threads'}
+            {account.platform === 'x' ? 'X' : account.platform === 'instagram' ? 'Instagram' : 'Threads'}
           </p>
           <p>
             <span className="text-gray-500">投稿時刻: </span>
@@ -60,22 +60,23 @@ export default async function AccountSettingsPage({
         </div>
       </div>
 
-      {account.platform === 'threads' && (
+      {account.platform !== 'x' && (
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-sm font-medium mb-1">Threads API</h2>
+          <h2 className="text-sm font-medium mb-1">{account.platform === 'instagram' ? 'Instagram' : 'Threads'} API</h2>
           <p className="text-xs text-gray-500 mb-4">
             Meta for Developersで生成した長期アクセストークンを設定します。
           </p>
-          <ThreadsTokenForm
+          <MetaTokenForm
             accountId={account.id}
-            initialHasToken={Boolean(account.access_token)}
+            expiresAt={account.token_expires_at}
+            connected={account.connection_status === 'connected'}
           />
         </div>
       )}
 
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-sm font-medium mb-4">自動リプライ設定</h2>
-        {account.platform === 'threads' ? (
+        {account.platform === 'threads' && account.publishing_policy !== 'explicit' ? (
           <AutoReplyForm
             accountId={account.id}
             initial={{
@@ -85,7 +86,7 @@ export default async function AccountSettingsPage({
             }}
           />
         ) : (
-          <p className="text-sm text-gray-500">自動リプライは Threads のみ対応しています。</p>
+          <p className="text-sm text-gray-500">明示承認が必要なアカウントでは自動リプライを実行しません。</p>
         )}
       </div>
     </div>
