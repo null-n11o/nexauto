@@ -18,7 +18,7 @@ export class CompaniesPage {
   }
 
   async goto() {
-    await this.page.goto('/companies')
+    await this.page.goto('/app/companies')
   }
 
   async updateName(name: string) {

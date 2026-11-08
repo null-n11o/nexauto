@@ -47,7 +47,7 @@ export function MetricsView({ accounts, initialPosts }: Props) {
           ))}
         </div>
         <a
-          href={`/analytics/report?account_id=${selectedAccountId}`}
+          href={`/app/analytics/report?account_id=${selectedAccountId}`}
           target="_blank"
           className="text-sm text-blue-600 hover:underline whitespace-nowrap"
         >

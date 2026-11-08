@@ -87,7 +87,7 @@ export function ReportsList({ accounts, initialReports }: Props) {
                     )}
                   </td>
                   <td className="p-3 text-right whitespace-nowrap">
-                    <Link href={`/analytics/reports/${r.id}`} className="text-blue-600 hover:underline">
+                    <Link href={`/app/analytics/reports/${r.id}`} className="text-blue-600 hover:underline">
                       詳細
                     </Link>
                   </td>

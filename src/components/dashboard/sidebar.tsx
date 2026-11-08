@@ -12,15 +12,15 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { href: '/posts', label: '投稿管理' },
-  { href: '/publishing', label: 'Instagram・Threads投稿' },
-  { href: '/accounts', label: 'アカウント' },
-  { href: '/analytics', label: '分析' },
+  { href: '/app/posts', label: '投稿管理' },
+  { href: '/app/publishing', label: 'Instagram・Threads投稿' },
+  { href: '/app/accounts', label: 'アカウント' },
+  { href: '/app/analytics', label: '分析' },
 ]
 
 const adminNavItems = [
-  { href: '/users', label: 'ユーザー管理' },
-  { href: '/companies', label: '企業設定' },
+  { href: '/app/users', label: 'ユーザー管理' },
+  { href: '/app/companies', label: '企業設定' },
 ]
 
 export function Sidebar({ role }: SidebarProps) {
@@ -30,7 +30,7 @@ export function Sidebar({ role }: SidebarProps) {
 
   async function handleLogout() {
     await supabase.auth.signOut()
-    router.push('/login')
+    router.push('/app/login')
     router.refresh()
   }
 
@@ -39,7 +39,7 @@ export function Sidebar({ role }: SidebarProps) {
   return (
     <aside className="w-56 bg-gray-900 text-white flex flex-col min-h-screen">
       <div className="px-4 py-5 border-b border-gray-700 flex items-center">
-        <Link href="/posts" className="block focus:outline-none">
+        <Link href="/app/posts" className="block focus:outline-none">
           <NexAutoLogo variant="dark" width={128} priority />
         </Link>
       </div>

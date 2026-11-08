@@ -18,6 +18,6 @@ export class AnalyticsPage {
   }
 
   async goto() {
-    await this.page.goto('/analytics')
+    await this.page.goto('/app/analytics')
   }
 }

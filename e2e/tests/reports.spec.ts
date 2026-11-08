@@ -8,13 +8,13 @@ test.describe('未認証', () => {
   test.use({ storageState: { cookies: [], origins: [] } })
 
   test('未認証で /analytics/reports にアクセスすると /login にリダイレクトされる', async ({ page }) => {
-    await page.goto('/analytics/reports')
-    await expect(page).toHaveURL('/login')
+    await page.goto('/app/analytics/reports')
+    await expect(page).toHaveURL('/app/login')
   })
 
   test('未認証で /analytics/reports/[id] にアクセスすると /login にリダイレクトされる', async ({ page }) => {
-    await page.goto('/analytics/reports/00000000-0000-0000-0000-000000000000')
-    await expect(page).toHaveURL('/login')
+    await page.goto('/app/analytics/reports/00000000-0000-0000-0000-000000000000')
+    await expect(page).toHaveURL('/app/login')
   })
 })
 
@@ -148,11 +148,11 @@ test.describe('分析レポート（認証済み）', () => {
     const reportsLink = page.getByRole('link', { name: '分析レポート' })
     await expect(reportsLink).toBeVisible()
     await reportsLink.click()
-    await expect(page).toHaveURL('/analytics/reports')
+    await expect(page).toHaveURL('/app/analytics/reports')
   })
 
-  test('/analytics/reports にアカウントタブとレポート一覧が表示される', async ({ page }) => {
-    await page.goto('/analytics/reports')
+  test('/app/analytics/reports にアカウントタブとレポート一覧が表示される', async ({ page }) => {
+    await page.goto('/app/analytics/reports')
 
     await expect(page.getByRole('heading', { name: '分析レポート' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'E2Eテストアカウント' })).toBeVisible()
@@ -162,8 +162,8 @@ test.describe('分析レポート（認証済み）', () => {
     await expect(detailLinks.first()).toBeVisible()
   })
 
-  test('/analytics/reports/[id] でインサイト未生成のレポート詳細が表示される', async ({ page }) => {
-    await page.goto(`/analytics/reports/${reportId}`)
+  test('/app/analytics/reports/[id] でインサイト未生成のレポート詳細が表示される', async ({ page }) => {
+    await page.goto(`/app/analytics/reports/${reportId}`)
 
     await expect(page.getByRole('heading', { name: 'E2Eテストアカウント 分析レポート' })).toBeVisible()
     await expect(page.getByText('全体サマリー')).toBeVisible()
@@ -173,8 +173,8 @@ test.describe('分析レポート（認証済み）', () => {
     await expect(page.getByText('インサイト分析は未生成です。')).toBeVisible()
   })
 
-  test('/analytics/reports/[id] でインサイト生成済みのレポート詳細が表示される', async ({ page }) => {
-    await page.goto(`/analytics/reports/${reportWithInsightsId}`)
+  test('/app/analytics/reports/[id] でインサイト生成済みのレポート詳細が表示される', async ({ page }) => {
+    await page.goto(`/app/analytics/reports/${reportWithInsightsId}`)
 
     await expect(page.getByText('E2Eテスト用の注目投稿コメント')).toBeVisible()
     await expect(page.getByText('E2Eテスト用のエンゲージメント考察')).toBeVisible()
@@ -182,7 +182,7 @@ test.describe('分析レポート（認証済み）', () => {
   })
 
   test('存在しない id で /analytics/reports/[id] にアクセスすると404になる', async ({ page }) => {
-    const response = await page.goto('/analytics/reports/00000000-0000-0000-0000-000000000000')
+    const response = await page.goto('/app/analytics/reports/00000000-0000-0000-0000-000000000000')
     expect(response?.status()).toBe(404)
   })
 })

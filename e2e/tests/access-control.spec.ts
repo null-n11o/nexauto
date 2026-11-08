@@ -22,19 +22,19 @@ test.describe('operator の権限制御', () => {
 
   test('operator のサイドバーに「ユーザー管理」リンクが表示されない', async ({ page }) => {
     const sidebar = new SidebarPage(page)
-    await page.goto('/posts')
+    await page.goto('/app/posts')
     await expect(sidebar.navLink('ユーザー管理')).not.toBeVisible()
   })
 
   test('operator のサイドバーに「企業設定」リンクが表示されない', async ({ page }) => {
     const sidebar = new SidebarPage(page)
-    await page.goto('/posts')
+    await page.goto('/app/posts')
     await expect(sidebar.navLink('企業設定')).not.toBeVisible()
   })
 
   test('operator のサイドバーに「投稿管理」「アカウント」リンクは表示される', async ({ page }) => {
     const sidebar = new SidebarPage(page)
-    await page.goto('/posts')
+    await page.goto('/app/posts')
     await expect(sidebar.navLink('投稿管理')).toBeVisible()
     await expect(sidebar.navLink('アカウント')).toBeVisible()
   })

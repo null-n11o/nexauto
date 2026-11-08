@@ -69,20 +69,20 @@ setup.describe('create auth states', () => {
   })
 
   setup('save admin auth state', async ({ page }) => {
-    await page.goto('/login')
+    await page.goto('/app/login')
     await page.getByLabel('Email').fill(ADMIN_EMAIL)
     await page.getByLabel('Password').fill(ADMIN_PASSWORD)
     await page.getByRole('button', { name: 'Sign in' }).click()
-    await page.waitForURL('/posts')
+    await page.waitForURL('/app/posts')
     await page.context().storageState({ path: adminFile })
   })
 
   setup('save operator auth state', async ({ page }) => {
-    await page.goto('/login')
+    await page.goto('/app/login')
     await page.getByLabel('Email').fill(OPERATOR_EMAIL)
     await page.getByLabel('Password').fill(OPERATOR_PASSWORD)
     await page.getByRole('button', { name: 'Sign in' }).click()
-    await page.waitForURL('/posts')
+    await page.waitForURL('/app/posts')
     await page.context().storageState({ path: operatorFile })
   })
 })

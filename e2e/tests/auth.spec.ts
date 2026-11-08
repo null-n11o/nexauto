@@ -13,7 +13,7 @@ test.describe('未認証', () => {
     const loginPage = new LoginPage(page)
     await loginPage.goto()
     await loginPage.login(LOGINTEST_EMAIL, LOGINTEST_PASSWORD)
-    await expect(page).toHaveURL('/posts')
+    await expect(page).toHaveURL('/app/posts')
   })
 
   test('誤ったパスワードではエラーメッセージが表示される', async ({ page }) => {
@@ -21,12 +21,12 @@ test.describe('未認証', () => {
     await loginPage.goto()
     await loginPage.login('e2e-admin@test.com', 'wrongpassword')
     await expect(loginPage.errorMessage).toBeVisible()
-    await expect(page).toHaveURL('/login')
+    await expect(page).toHaveURL('/app/login')
   })
 
   test('未認証で /posts にアクセスすると /login にリダイレクトされる', async ({ page }) => {
-    await page.goto('/posts')
-    await expect(page).toHaveURL('/login')
+    await page.goto('/app/posts')
+    await expect(page).toHaveURL('/app/login')
   })
 })
 
@@ -39,10 +39,10 @@ test.describe('認証済み', () => {
     const loginPage = new LoginPage(page)
     await loginPage.goto()
     await loginPage.login(LOGINTEST_EMAIL, LOGINTEST_PASSWORD)
-    await expect(page).toHaveURL('/posts')
+    await expect(page).toHaveURL('/app/posts')
 
     const sidebar = new SidebarPage(page)
     await sidebar.logout()
-    await expect(page).toHaveURL('/login')
+    await expect(page).toHaveURL('/app/login')
   })
 })

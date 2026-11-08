@@ -6,13 +6,13 @@ test.describe('未認証', () => {
   test.use({ storageState: { cookies: [], origins: [] } })
 
   test('未認証で /analytics/report にアクセスすると /login にリダイレクトされる', async ({ page }) => {
-    await page.goto('/analytics/report')
-    await expect(page).toHaveURL('/login')
+    await page.goto('/app/analytics/report')
+    await expect(page).toHaveURL('/app/login')
   })
 })
 
 test.describe('レポートページ（認証済み）', () => {
-  test('/analytics/report にアクセスするとレポートのタイトルが表示される', async ({ page }) => {
+  test('/app/analytics/report にアクセスするとレポートのタイトルが表示される', async ({ page }) => {
     const reportPage = new ReportPage(page)
     await reportPage.goto()
     await expect(reportPage.heading).toBeVisible()

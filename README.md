@@ -38,6 +38,20 @@ Superpowers design and planning artifacts live in `docs/superpowers/`; active SD
 
 ## Getting Started
 
+The public product landing page is served at `/`. The authenticated application
+lives at `/app` (login: `/app/login`, posts: `/app/posts`). Existing page URLs,
+including password-reset email URLs, redirect to their `/app` equivalents.
+API endpoints remain at `/api` for existing integrations and scheduled jobs.
+
+Landing page screenshots use the actual `PostsTable`, `MetricsView`, and `Sidebar`
+components with fictional sample data. To refresh them locally with Chrome installed:
+
+```bash
+node scripts/capture-landing-screenshots.mjs
+```
+
+This capture runs locally without Supabase credentials or social platform API calls.
+
 First, run the development server:
 
 ```bash
