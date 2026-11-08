@@ -219,6 +219,16 @@
   font-size: 10px;
   color: var(--muted);
 }
+.platformBrand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+.platformBrand img {
+  display: block;
+  flex-shrink: 0;
+  object-fit: contain;
+}
 .section {
   max-width: 1320px;
   margin: auto;
@@ -612,8 +622,15 @@
     padding: 36px 20px;
   }
   .platforms > div {
-    gap: 30px;
-    font-size: 21px;
+    gap: 24px;
+    font-size: 18px;
+  }
+  .platformBrand {
+    gap: 8px;
+  }
+  .platformBrand img {
+    width: 24px;
+    height: auto;
   }
   .platforms small {
     font-size: 9px;
