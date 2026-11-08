@@ -127,7 +127,7 @@ export default function Home() {
               alt="NexAutoの投稿管理画面。アカウント別の投稿一覧、予約日時、レビュー状態、投稿の反応を一画面で確認できます。"
               width={1440}
               height={840}
-              priority
+              loading="eager"
               sizes="(max-width: 768px) 100vw, 1200px"
             />
           </div>
