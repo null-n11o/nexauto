@@ -141,9 +141,15 @@ export default function Home() {
         <section className={styles.platforms} aria-label="対応プラットフォーム">
           <p>いつものSNSを、ひとつの場所で。</p>
           <div>
-            <span>Threads</span>
+            <span className={styles.platformBrand}>
+              <Image src="/brand/social/threads.svg" alt="" width={28} height={31} />
+              Threads
+            </span>
             <span>𝕏</span>
-            <span>Instagram</span>
+            <span className={styles.platformBrand}>
+              <Image src="/brand/social/instagram.svg" alt="" width={28} height={28} />
+              Instagram
+            </span>
           </div>
           <small>
             ※ 対応する投稿・分析機能はプラットフォームごとに異なります。
