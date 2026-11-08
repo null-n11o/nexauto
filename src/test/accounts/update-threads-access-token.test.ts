@@ -15,7 +15,7 @@ vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
 process.env.ENCRYPTION_KEY = 'd'.repeat(64)
 
-const { updateThreadsAccessToken } = await import('@/app/(dashboard)/accounts/actions')
+const { updateThreadsAccessToken } = await import('@/app/app/(dashboard)/accounts/actions')
 
 function wireSupabase(options: {
   role?: string

@@ -10,6 +10,12 @@ The password reset form requests `${window.location.origin}/reset-password`.
 Register each supported origin's exact `/reset-password` URL in **Redirect URLs**.
 An unapproved redirect falls back to Site URL.
 
+The app now lives under `/app`. The allowlisted `/reset-password` entry remains
+as a permanent redirect to `/app/reset-password`, so existing recovery emails and
+Supabase settings continue to work. Query parameters and browser URL fragments
+are preserved by the redirect. Login and recovery forms link to `/app/login`,
+`/app/forgot-password`, and `/app/reset-password` inside the application.
+
 ## Hosted configuration applied on 2026-09-09
 
 - Site URL: `https://sns-automation-one.vercel.app`

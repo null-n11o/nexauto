@@ -36,7 +36,7 @@ process.env.ENCRYPTION_KEY = 'b'.repeat(64)
 
 // Import actions after mocks are registered
 const { createAccount, deleteAccount } = await import(
-  '@/app/(dashboard)/accounts/actions'
+  '@/app/app/(dashboard)/accounts/actions'
 )
 
 describe('account actions', () => {

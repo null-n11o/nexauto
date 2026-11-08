@@ -20,6 +20,6 @@ export class ReportPage {
   }
 
   async goto() {
-    await this.page.goto('/analytics/report')
+    await this.page.goto('/app/analytics/report')
   }
 }

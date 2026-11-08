@@ -51,7 +51,7 @@ await writeFile(
 )
 await writeFile(
   resolve(root, 'entry.tsx'),
-  `import '../../src/app/globals.css';import React from 'react';import {createRoot} from 'react-dom/client';import {PublishingPanel} from '../../src/app/(dashboard)/publishing/publishing-panel';createRoot(document.getElementById('root')!).render(<PublishingPanel accounts={${JSON.stringify([account])}} initialPosts={${JSON.stringify([post])}} initialJobs={[]} />);`,
+  `import '../../src/app/globals.css';import React from 'react';import {createRoot} from 'react-dom/client';import {PublishingPanel} from '../../src/app/app/(dashboard)/publishing/publishing-panel';createRoot(document.getElementById('root')!).render(<PublishingPanel accounts={${JSON.stringify([account])}} initialPosts={${JSON.stringify([post])}} initialJobs={[]} />);`,
 )
 const fixture = {
   name: 'publishing-test-api',

@@ -52,7 +52,7 @@ describe('MetricsView', () => {
   it('印刷リンクは選択中アカウントの account_id を含む', () => {
     render(<MetricsView accounts={accounts} initialPosts={[]} />)
     const link = screen.getByText('レポートを印刷').closest('a')
-    expect(link?.getAttribute('href')).toBe('/analytics/report?account_id=a1')
+    expect(link?.getAttribute('href')).toBe('/app/analytics/report?account_id=a1')
   })
 
   it('別アカウントのタブを押すと API を叩き posts を差し替える', async () => {
@@ -74,6 +74,6 @@ describe('MetricsView', () => {
     })
     // 印刷リンクも a2 に更新
     expect(screen.getByText('レポートを印刷').closest('a')?.getAttribute('href'))
-      .toBe('/analytics/report?account_id=a2')
+      .toBe('/app/analytics/report?account_id=a2')
   })
 })

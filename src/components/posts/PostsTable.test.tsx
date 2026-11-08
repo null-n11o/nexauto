@@ -256,7 +256,7 @@ describe('PostsTable account platform display', () => {
     rerender(<PostsTable initialPosts={[]} accounts={mockAccounts} isAdmin />)
     expect(screen.getByRole('link', { name: 'アカウント名を変更' })).toHaveAttribute(
       'href',
-      '/accounts/acc-1',
+      '/app/accounts/acc-1',
     )
   })
 })

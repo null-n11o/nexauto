@@ -237,7 +237,7 @@ export function PostsTable({ initialPosts, accounts, isAdmin = false }: Props) {
               <span className="ml-1">（{platformLabel(selectedAccount.platform)}）</span>
               {isAdmin && (
                 <Link
-                  href={`/accounts/${selectedAccount.id}`}
+                  href={`/app/accounts/${selectedAccount.id}`}
                   className="ml-2 text-blue-600 hover:underline"
                 >
                   アカウント名を変更

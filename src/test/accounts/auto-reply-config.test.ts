@@ -12,7 +12,7 @@ vi.mock('@/lib/supabase/server', () => ({
 }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
-const { updateAutoReplyConfig } = await import('@/app/(dashboard)/accounts/actions')
+const { updateAutoReplyConfig } = await import('@/app/app/(dashboard)/accounts/actions')
 
 // profile(users) → account select(accounts) → update(accounts) の順に from が呼ばれる
 function wireSupabase(opts: {

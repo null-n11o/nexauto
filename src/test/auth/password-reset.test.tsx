@@ -26,7 +26,7 @@ describe('password reset request page', () => {
   })
 
   it('sends a reset email with the reset page as the redirect target', async () => {
-    const { default: ForgotPasswordPage } = await import('@/app/(auth)/forgot-password/page')
+    const { default: ForgotPasswordPage } = await import('@/app/app/(auth)/forgot-password/page')
     render(<ForgotPasswordPage />)
 
     fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'user@example.com' } })
@@ -44,7 +44,7 @@ describe('password reset request page', () => {
     mockResetPasswordForEmail.mockResolvedValueOnce({
       error: { message: 'Unable to send reset email' },
     })
-    const { default: ForgotPasswordPage } = await import('@/app/(auth)/forgot-password/page')
+    const { default: ForgotPasswordPage } = await import('@/app/app/(auth)/forgot-password/page')
     render(<ForgotPasswordPage />)
 
     fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'user@example.com' } })
@@ -62,7 +62,7 @@ describe('password reset page', () => {
   })
 
   it('updates the password and confirms the reset', async () => {
-    const { default: ResetPasswordPage } = await import('@/app/(auth)/reset-password/page')
+    const { default: ResetPasswordPage } = await import('@/app/app/(auth)/reset-password/page')
     render(<ResetPasswordPage />)
 
     fireEvent.change(screen.getByLabelText('New password'), { target: { value: 'new-password-123' } })
@@ -76,7 +76,7 @@ describe('password reset page', () => {
   })
 
   it('does not update the password when confirmation does not match', async () => {
-    const { default: ResetPasswordPage } = await import('@/app/(auth)/reset-password/page')
+    const { default: ResetPasswordPage } = await import('@/app/app/(auth)/reset-password/page')
     render(<ResetPasswordPage />)
 
     fireEvent.change(screen.getByLabelText('New password'), { target: { value: 'new-password-123' } })
@@ -90,12 +90,12 @@ describe('password reset page', () => {
 
 describe('login page password reset link', () => {
   it('links to the password reset request page', async () => {
-    const { default: LoginPage } = await import('@/app/(auth)/login/page')
+    const { default: LoginPage } = await import('@/app/app/(auth)/login/page')
     render(<LoginPage />)
 
     expect(screen.getByRole('link', { name: 'Forgot password?' })).toHaveAttribute(
       'href',
-      '/forgot-password',
+      '/app/forgot-password',
     )
   })
 })

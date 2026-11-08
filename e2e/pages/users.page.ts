@@ -17,7 +17,7 @@ export class UsersPage {
   }
 
   async goto() {
-    await this.page.goto('/users')
+    await this.page.goto('/app/users')
   }
 
   getUserRow(email: string): Locator {
