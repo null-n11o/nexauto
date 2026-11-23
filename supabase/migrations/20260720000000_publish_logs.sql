@@ -1,5 +1,9 @@
 -- =============================================================================
 -- publish_logs: publish試行(成功/失敗)の事後解析ログ
+--
+-- This table was never applied in production. Apply this migration together
+-- with 20261123000000_publish_resilience.sql through the project's normal
+-- process. Do not run it against production from an agent or CI step.
 -- =============================================================================
 
 CREATE TABLE IF NOT EXISTS publish_logs (

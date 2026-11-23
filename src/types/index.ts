@@ -52,6 +52,8 @@ export interface Post {
   published_at: string | null
   platform_post_id: string | null
   created_at: string
+  publish_claimed_at?: string | null
+  publish_retry_count?: number
   asset_id?: string | null
   cover_asset_id?: string | null
   execution_at?: string | null
@@ -186,12 +188,15 @@ export interface PublishLog {
   platform: Platform
   trigger: 'cron' | 'manual'
   result: 'success' | 'failed'
-  failed_step: 'create' | 'publish' | null
+  failed_step: 'create' | 'status' | 'publish' | null
   total_ms: number
   create_http_status: number | null
   container_id: string | null
   create_ms: number | null
   create_response: unknown | null
+  status_http_status: number | null
+  status_ms: number | null
+  status_response: unknown | null
   publish_http_status: number | null
   platform_post_id: string | null
   publish_ms: number | null

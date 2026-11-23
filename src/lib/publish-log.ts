@@ -30,6 +30,9 @@ export interface PublishLogInsert {
   container_id: string | null
   create_ms: number | null
   create_response: unknown | null
+  status_http_status: number | null
+  status_ms: number | null
+  status_response: unknown | null
   publish_http_status: number | null
   platform_post_id: string | null
   publish_ms: number | null
@@ -62,6 +65,9 @@ export function buildPublishLogEntry(input: BuildLogInput): PublishLogInsert {
     container_id: meta.containerId,
     create_ms: meta.create?.ms ?? null,
     create_response: meta.create ? maskSecrets(meta.create.response) : null,
+    status_http_status: meta.status?.httpStatus ?? null,
+    status_ms: meta.status?.ms ?? null,
+    status_response: meta.status ? maskSecrets(meta.status.response) : null,
     publish_http_status: meta.publish?.httpStatus ?? null,
     platform_post_id: platformPostId,
     publish_ms: meta.publish?.ms ?? null,
@@ -72,7 +78,11 @@ export function buildPublishLogEntry(input: BuildLogInput): PublishLogInsert {
 
 const EMPTY_META: PublishMeta = { containerId: null, create: null, status: null, publish: null, failedStep: null }
 
-type SupabaseLike = { from: (table: string) => { insert: (row: PublishLogInsert) => PromiseLike<{ error: unknown }> } }
+type SupabaseLike = {
+  from: (table: string) => {
+    insert: (row: PublishLogInsert) => PromiseLike<{ error: { message?: string } | null }>
+  }
+}
 
 interface PublishAndLogArgs {
   post: { id: string; account_id: string; content: string; image_url: string | null }
@@ -90,12 +100,13 @@ interface PublishAndLogArgs {
 export async function publishAndLog(
   supabase: SupabaseLike,
   { post, account, trigger }: PublishAndLogArgs,
-): Promise<{ platformPostId: string | null; error: string | null }> {
+): Promise<{ platformPostId: string | null; error: string | null; transient: boolean }> {
   const start = Date.now()
   let result: 'success' | 'failed' = 'success'
   let platformPostId: string | null = null
   let meta: PublishMeta = EMPTY_META
   let errorMessage: string | null = null
+  let transient = false
 
   try {
     const r = await publishPost({
@@ -113,17 +124,23 @@ export async function publishAndLog(
   } catch (err) {
     result = 'failed'
     errorMessage = err instanceof Error ? err.message : 'Unknown error'
-    if (err instanceof PublishError) meta = err.meta
+    if (err instanceof PublishError) {
+      meta = err.meta
+      transient = err.transient
+    }
   }
 
   const entry = buildPublishLogEntry({
     post, account, trigger, result, platformPostId, meta, errorMessage, totalMs: Date.now() - start,
   })
   try {
-    await supabase.from('publish_logs').insert(entry)
+    const { error } = await supabase.from('publish_logs').insert(entry)
+    if (error?.message) {
+      console.error('publish_logs insert failed', error.message)
+    }
   } catch {
     // ログ書き込み失敗はpublish結果に影響させない
   }
 
-  return { platformPostId, error: errorMessage }
+  return { platformPostId, error: errorMessage, transient }
 }
