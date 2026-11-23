@@ -62,6 +62,8 @@ describe('buildPublishLogEntry', () => {
       total_ms: 1234,
       container_id: 'c1',
       create_http_status: 200,
+      status_http_status: 200,
+      status_response: { status: 'FINISHED' },
       publish_http_status: 200,
       platform_post_id: 'p1',
       error_message: null,
@@ -80,6 +82,37 @@ describe('buildPublishLogEntry', () => {
     expect(row.create_response).toEqual({ access_token: '***', id: 'c1' })
     expect(row.failed_step).toBe('publish')
     expect(row.error_message).toBe('boom')
+  })
+
+  it('stores the full status-poll and publish error bodies for a failed Threads publish', () => {
+    const meta: PublishMeta = {
+      containerId: 'c1',
+      create: { httpStatus: 200, ms: 80, response: { id: 'c1' } },
+      status: { httpStatus: 200, ms: 150, response: { status: 'FINISHED', id: 'c1' } },
+      publish: {
+        httpStatus: 400,
+        ms: 12,
+        response: {
+          error: {
+            message: 'The requested resource does not exist',
+            code: 24,
+            error_subcode: 4279009,
+            fbtrace_id: 'trace-1',
+          },
+        },
+      },
+      failedStep: 'publish',
+    }
+    const row = buildPublishLogEntry({ ...base, result: 'failed', platformPostId: null, meta, errorMessage: 'Threads publish error' })
+    expect(row.status_response).toEqual({ status: 'FINISHED', id: 'c1' })
+    expect(row.publish_response).toEqual({
+      error: {
+        message: 'The requested resource does not exist',
+        code: 24,
+        error_subcode: 4279009,
+        fbtrace_id: 'trace-1',
+      },
+    })
   })
 })
 
@@ -107,7 +140,7 @@ describe('publishAndLog', () => {
 
     const res = await publishAndLog(client as never, { post, account, trigger: 'cron' })
 
-    expect(res).toEqual({ platformPostId: 'p1', error: null })
+    expect(res).toEqual({ platformPostId: 'p1', error: null, transient: false })
     expect(insert).toHaveBeenCalledWith(expect.objectContaining({ result: 'success', platform_post_id: 'p1' }))
   })
 
@@ -130,6 +163,43 @@ describe('publishAndLog', () => {
 
     const res = await publishAndLog(client as never, { post, account, trigger: 'cron' })
 
-    expect(res).toEqual({ platformPostId: 'p1', error: null })
+    expect(res).toEqual({ platformPostId: 'p1', error: null, transient: false })
+  })
+
+  it('returns transient=true for a retryable PublishError', async () => {
+    const meta: PublishMeta = {
+      containerId: 'c1',
+      create: null,
+      status: { httpStatus: 200, ms: 50, response: { status: 'FINISHED' } },
+      publish: { httpStatus: 400, ms: 5, response: { error: { code: 24, error_subcode: 4279009 } } },
+      failedStep: 'publish',
+    }
+    const err = new PublishError('Threads publish error: The requested resource does not exist', meta, true)
+    vi.mocked(publishPost).mockRejectedValue(err)
+    const { client } = makeSupabase()
+
+    const res = await publishAndLog(client as never, { post, account, trigger: 'cron' })
+
+    expect(res.error).toContain('does not exist')
+    expect(res.transient).toBe(true)
+  })
+
+  it('logs a PostgREST insert error without throwing', async () => {
+    vi.mocked(publishPost).mockResolvedValue({
+      platformPostId: 'p1',
+      meta: { containerId: null, create: null, status: null, publish: null, failedStep: null },
+    })
+    const insert = vi.fn().mockResolvedValue({ error: { message: "Could not find the table 'public.publish_logs' in the schema cache", code: 'PGRST205' } })
+    const client = { from: vi.fn(() => ({ insert })) }
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const res = await publishAndLog(client as never, { post, account, trigger: 'cron' })
+
+    expect(res).toEqual({ platformPostId: 'p1', error: null, transient: false })
+    expect(consoleError).toHaveBeenCalledWith(
+      'publish_logs insert failed',
+      expect.stringContaining('publish_logs'),
+    )
+    consoleError.mockRestore()
   })
 })

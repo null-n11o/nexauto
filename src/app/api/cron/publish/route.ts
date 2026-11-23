@@ -1,6 +1,11 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { publishAndLog } from '@/lib/publish-log'
+import { claimPostForPublish, cronPublishDisposition, CRON_PUBLISH_MAX_DURATION } from '@/lib/cron-publish'
+
+// Settle delay + 3 publish retries (5/10/15s) plus status rechecks must fit
+// inside one invocation. Posts in a run are processed in parallel.
+export const maxDuration = CRON_PUBLISH_MAX_DURATION
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get('authorization')
@@ -24,8 +29,11 @@ export async function GET(request: Request) {
 
   const results = await Promise.allSettled(
     posts.filter(post => post.accounts.platform !== 'instagram' && post.accounts.publishing_policy !== 'explicit').map(async post => {
+      const claimed = await claimPostForPublish(supabase, post.id)
+      if (!claimed) return { id: post.id, ok: false, skipped: true }
+
       const account = post.accounts as Record<string, string | null>
-      const { platformPostId, error } = await publishAndLog(supabase, {
+      const { platformPostId, error, transient } = await publishAndLog(supabase, {
         post: { id: post.id, account_id: post.account_id, content: post.content, image_url: post.image_url ?? null },
         account: {
           platform: account.platform as never,
@@ -38,16 +46,36 @@ export async function GET(request: Request) {
         trigger: 'cron',
       })
 
-      if (error) {
-        await supabase.from('posts').update({ status: 'failed', error_message: error }).eq('id', post.id)
+      const retryCount = typeof post.publish_retry_count === 'number' ? post.publish_retry_count : 0
+      const disposition = cronPublishDisposition({ error, transient, retryCount })
+
+      if (disposition === 'published') {
+        await supabase
+          .from('posts')
+          .update({ status: 'published', published_at: new Date().toISOString(), platform_post_id: platformPostId, error_message: null })
+          .eq('id', post.id)
+        return { id: post.id, ok: true }
+      }
+
+      if (disposition === 'requeue') {
+        const requeue = await supabase
+          .from('posts')
+          .update({
+            status: 'ready',
+            publish_retry_count: retryCount + 1,
+            publish_claimed_at: null,
+            error_message: error,
+          })
+          .eq('id', post.id)
+        if (requeue.error) {
+          console.error('publish requeue failed', requeue.error.message)
+          await supabase.from('posts').update({ status: 'failed', error_message: error }).eq('id', post.id)
+        }
         return { id: post.id, ok: false, error }
       }
 
-      await supabase
-        .from('posts')
-        .update({ status: 'published', published_at: new Date().toISOString(), platform_post_id: platformPostId })
-        .eq('id', post.id)
-      return { id: post.id, ok: true }
+      await supabase.from('posts').update({ status: 'failed', error_message: error }).eq('id', post.id)
+      return { id: post.id, ok: false, error }
     })
   )
 
@@ -60,7 +88,10 @@ export async function GET(request: Request) {
 async function cleanupOldLogs(supabase: Awaited<ReturnType<typeof createServiceClient>>) {
   try {
     const cutoff = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString()
-    await supabase.from('publish_logs').delete().lt('created_at', cutoff)
+    const { error } = await supabase.from('publish_logs').delete().lt('created_at', cutoff)
+    if (error?.message) {
+      console.error('publish_logs cleanup failed', error.message)
+    }
   } catch {
     // クリーンアップ失敗はpublishに影響させない
   }
